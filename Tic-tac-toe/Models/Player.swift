@@ -8,13 +8,7 @@
 
 import Foundation
 
-enum Player {
+enum PlayerType {
     case human
     case computer
-}
-
-enum GameResult {
-    case ongoing
-    case draw
-    case win(Player)
 }

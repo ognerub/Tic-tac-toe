@@ -18,22 +18,49 @@ struct TicTacToeEngine {
         [0,3,6], [1,4,7], [2,5,8]
     ]
 
-    func winner(for moves: Set<Int>) -> Bool {
-        guard moves.count >= 3 else { return false }
-        return winPatterns.contains { $0.isSubset(of: moves) }
+    func winningPattern(for moves: Set<Int>) -> Set<Int>? {
+        guard moves.count >= 3 else { return nil }
+        return winPatterns.first(where: { $0.isSubset(of: moves) })
     }
 
     func freeSquares(human: Set<Int>, computer: Set<Int>) -> Set<Int> {
         allSquares.subtracting(human.union(computer))
     }
 
-    func gameResult(human: Set<Int>, computer: Set<Int>) -> GameResult {
-        if winner(for: human) { return .win(.human) }
-        if winner(for: computer) { return .win(.computer) }
-        if freeSquares(human: human, computer: computer).isEmpty {
-            return .draw
+    func gameResult(human: Set<Int>, computer: Set<Int>) -> (result: GameResult, winLine: PlaygroundView.WinLineType?) {
+        if let humanWinPattern = winningPattern(for: human) {
+            return (.win(.human), getWinLineType(humanWinPattern))
         }
-        return .ongoing
+        if let computerWinPattern = winningPattern(for: computer) {
+            return (.win(.computer), getWinLineType(computerWinPattern))
+        }
+        if freeSquares(human: human, computer: computer).isEmpty {
+            return (.draw, nil)
+        }
+        return (.ongoing, nil)
+    }
+
+    private func getWinLineType(_ winPattern: Set<Int>) -> PlaygroundView.WinLineType? {
+        switch winPattern {
+        case [0,1,2]:
+             .horizontal(row: 0)
+        case [3,4,5]:
+            .horizontal(row: 1)
+        case [6,7,8]:
+            .horizontal(row: 2)
+        case [0,4,8]:
+            .diagonal(direction: 0)
+        case [2,4,6]:
+            .diagonal(direction: 1)
+        case [0,3,6]:
+            .vertical(column: 0)
+        case [1,4,7]:
+            .vertical(column: 1)
+        case [2,5,8]:
+            .vertical(column: 2)
+        default:
+            nil
+        }
     }
 }
 

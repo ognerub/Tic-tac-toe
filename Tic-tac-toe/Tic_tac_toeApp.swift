@@ -8,25 +8,32 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
+final class AppContainer {
+
+    let modelContainer: ModelContainer
+    let swiftDataManager: SwiftDataManager
+
+    init() {
+        let schema = Schema([User.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        guard let container = try? ModelContainer(for: schema, configurations: [config]) else {
+            fatalError("Failure to create a ModelContainer")
+        }
+        self.modelContainer = container
+        self.swiftDataManager = SwiftDataManager(container: container)
+    }
+}
+
+
 @main
 struct Tic_tac_toeApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    private let appContainer = AppContainer()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TicTacToeView(appContainer)
         }
-        .modelContainer(sharedModelContainer)
     }
 }

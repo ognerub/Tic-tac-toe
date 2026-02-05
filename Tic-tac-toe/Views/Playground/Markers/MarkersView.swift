@@ -7,45 +7,7 @@
 
 import SwiftUI
 
-struct AnimatedXMarker: View {
-    @State private var secondLine = false
-
-    var size: CGFloat = 75.0
-    var lineWidth: CGFloat {
-        size / 5
-    }
-
-    var body: some View {
-        ZStack {
-            DrawnShape(
-                shape: MarkerLine(),
-                color: .blue,
-                lineWidth: lineWidth,
-                duration: 0.25
-            )
-            .frame(width: size, height: size)
-            .rotationEffect(.degrees(-45))
-
-            if secondLine {
-                DrawnShape(
-                    shape: MarkerLine(),
-                    color: .blue,
-                    lineWidth: lineWidth,
-                    duration: 0.25
-                )
-                .frame(width: size, height: size)
-                .rotationEffect(.degrees(45))
-            }
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                secondLine = true
-            }
-        }
-    }
-}
-
-
+// MARK: - MarkersView
 struct MarkersView: View {
 
     var body: some View {
@@ -89,6 +51,7 @@ struct MarkersView: View {
     }
 }
 
+// MARK: - MarkerLine
 struct MarkerLine: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -102,6 +65,7 @@ struct MarkerLine: Shape {
     }
 }
 
+// MARK: - OpenMarkerCircle
 struct OpenMarkerCircle: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -143,6 +107,7 @@ struct OpenMarkerCircle: Shape {
     }
 }
 
+// MARK: - DrawnShape
 struct DrawnShape<S: Shape>: View {
     let shape: S
     let color: Color
@@ -170,6 +135,46 @@ struct DrawnShape<S: Shape>: View {
     }
 }
 
+// MARK: - AnimatedXMarker
+struct AnimatedXMarker: View {
+    @State private var secondLine = false
+
+    var size: CGFloat = 75.0
+    var lineWidth: CGFloat {
+        size / 5
+    }
+
+    var body: some View {
+        ZStack {
+            DrawnShape(
+                shape: MarkerLine(),
+                color: .blue,
+                lineWidth: lineWidth,
+                duration: 0.25
+            )
+            .frame(width: size, height: size)
+            .rotationEffect(.degrees(-45))
+
+            if secondLine {
+                DrawnShape(
+                    shape: MarkerLine(),
+                    color: .blue,
+                    lineWidth: lineWidth,
+                    duration: 0.25
+                )
+                .frame(width: size, height: size)
+                .rotationEffect(.degrees(45))
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                secondLine = true
+            }
+        }
+    }
+}
+
+// MARK: - AnimatedOMarker
 struct AnimatedOMarker: View {
 
     var size: CGFloat = 75.0
@@ -193,9 +198,8 @@ struct AnimatedOMarker: View {
 
 
 #Preview {
-    AnimatedXMarker()
-}
-
-#Preview {
-    AnimatedOMarker()
+    HStack {
+        AnimatedXMarker()
+        AnimatedOMarker()
+    }
 }
