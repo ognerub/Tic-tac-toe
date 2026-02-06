@@ -11,7 +11,7 @@ struct UserCardView: View {
 
     let user: User
     @Binding var isSelected: Bool
-    var font: Font = .default
+    var font: Font = .headline
     var imageSize: CGFloat? = nil
 
     var body: some View {
