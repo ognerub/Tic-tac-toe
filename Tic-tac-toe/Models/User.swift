@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class User {
+final class User: Identifiable, @unchecked Sendable {
     var id: UUID
     var name: String
     var iconName: String?
@@ -21,18 +21,52 @@ final class User {
     var gamesWonInARow: Int
     var totalInGameTime: Double
 
-    // MARK: - Init for a new user
-    init(_ name: String, _ iconName: String? = nil) {
+    // MARK: - Init
+    init(
+        _ name: String,
+        _ iconName: String? = nil,
+        totalGamesCount: Int = 0,
+        gamesWonByHuman: Int = 0,
+        drawGamesCount: Int = 0,
+        gamesWonInARow: Int = 0,
+        totalInGameTime: Double = 0.0
+    ) {
         self.id = UUID()
         self.name = name
         self.iconName = iconName
         self.createdAt = Date()
-        self.totalGamesCount = 0
-        self.gamesWonByHuman = 0
-        self.drawGamesCount = 0
-        self.gamesWonInARow = 0
-        self.totalInGameTime = 0.0
+        self.totalGamesCount = totalGamesCount
+        self.gamesWonByHuman = gamesWonByHuman
+        self.drawGamesCount = drawGamesCount
+        self.gamesWonInARow = gamesWonInARow
+        self.totalInGameTime = totalInGameTime
     }
+
+    func mapToCodable() -> UserCodable {
+        .init(
+            id: id,
+            name: name,
+            iconName: iconName,
+            createdAt: createdAt,
+            totalGamesCount: totalGamesCount,
+            gamesWonByHuman: gamesWonByHuman,
+            drawGamesCount: drawGamesCount,
+            gamesWonInARow: gamesWonInARow,
+            totalInGameTime: totalInGameTime
+        )
+    }
+}
+
+struct UserCodable: Codable {
+    let id: UUID
+    let name: String
+    let iconName: String?
+    let createdAt: Date
+    let totalGamesCount: Int
+    let gamesWonByHuman: Int
+    let drawGamesCount: Int
+    let gamesWonInARow: Int
+    let totalInGameTime: Double
 }
 
 

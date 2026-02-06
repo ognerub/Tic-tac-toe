@@ -13,26 +13,12 @@ import Combine
 final class TicTacToeViewModel: ObservableObject {
 
     // MARK: - Published properties
-    @Published var selectedTab: TabItemType = .playground {
-        didSet {
-            if selectedTab == .scorecards {
-                lastSelectedUser = selectedUser
-                selectedUser = nil
-            }
-            if selectedTab == .playground, lastSelectedUser != nil {
-                guard users.contains(where: { $0.id == lastSelectedUser?.id }) else {
-                    isPlayerSelectionPresented = true
-                    return
-                }
-                selectedUser = lastSelectedUser
-            }
-        }
-    }
+    @Published var selectedTab: TabItemType = .playground
     @Published var isAddUserPresented = false
     @Published var isPlayerSelectionPresented = false
 
     @Published var selectedUser: User?
-    @Published var lastSelectedUser: User?
+    @Published var selectedUserScorecard: User?
 
     @Published private(set) var users: [User] = []
     @Published private(set) var humanMoves: Set<Int> = []
@@ -41,25 +27,50 @@ final class TicTacToeViewModel: ObservableObject {
     @Published private(set) var winLineType: PlaygroundView.WinLineType?
     @Published private(set) var gameResult: GameResult?
 
-    private(set) var currentGameStartTime: Date?
-    private(set) var currentGameDuration: Double?
-    private(set) var gamesWonByHuman: Int = 0
-    private(set) var drawGamesCount: Int = 0
-    private(set) var totalGamesCount: Int = 0
-    private(set) var gamesWonInARow: Int = 0
+    @Published private(set) var currentGameStartTime: Date?
+    @Published private(set) var currentGameDuration: Double?
+    @Published private(set) var gamesWonInARow: Int = 0
 
     // MARK: - Stored properties
     private let engine = TicTacToeEngine()
-    private weak var dataManager: SwiftDataManager?
+    private let userDefaultsManager = UserDefaultsManager.shared
+    private let dataManager: SwiftDataManagerProtocol
+    private let networkManager: NetworkManagerProtocol
 
     // MARK: - Init
     init(_ appContainer: AppContainer) {
         self.dataManager = appContainer.swiftDataManager
-        prepareUsers()
+        self.networkManager = appContainer.networkManager
+    }
+
+    func sendUserData() async throws {
+        try await networkManager.sendData(users)
+    }
+
+    func prepareUsers() async {
+        guard users.isEmpty else { return }
+        var users = await dataManager.fetchUsers()
+        if users.isEmpty {
+            users = Mocks.users
+            Mocks.users.forEach {
+                dataManager.insert(user: $0)
+            }
+            dataManager.save()
+        }
+        self.users = users
+        if let lastSelectedUserId = userDefaultsManager.lastSelectedPlayerId,
+           let lastSelectedUser = users.first(where: { $0.id == UUID(uuidString: lastSelectedUserId) }) {
+            selectedUser = lastSelectedUser
+        }
+        if selectedUser == nil {
+            isPlayerSelectionPresented = true
+        }
     }
 
     func selectUser(_ user: User?) {
+        gamesWonInARow = 0
         selectedUser = user
+        userDefaultsManager.lastSelectedPlayerId = selectedUser?.id.uuidString
     }
 
 
@@ -75,20 +86,6 @@ final class TicTacToeViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             self?.alert = alert
         }
-    }
-}
-
-private extension TicTacToeViewModel {
-    func prepareUsers() {
-        var users = dataManager?.fetchUsers()
-        if users?.isEmpty == true || users == nil {
-            users = Mocks.users
-            Mocks.users.forEach {
-                dataManager?.insert(user: $0)
-            }
-            dataManager?.save()
-        }
-        self.users = users ?? []
     }
 }
 
@@ -116,7 +113,7 @@ extension TicTacToeViewModel {
             updateGameStats(.win(.human))
             winLineType = resolvedResult.winLine
         case .win(.computer):
-            showAlertWithDelay(.youLoose)
+            showAlertWithDelay(.youLose)
             updateGameStats(.win(.computer))
             winLineType = resolvedResult.winLine
         case .draw:
@@ -141,19 +138,23 @@ extension TicTacToeViewModel {
     private func updateGameStats(_ gameResult: GameResult) {
         self.gameResult = gameResult
         updateGameDuration()
-        totalGamesCount += 1
+        selectedUser?.totalGamesCount += 1
         switch gameResult {
         case .win(let player):
             switch player {
             case .human:
-                gamesWonByHuman += 1
+                selectedUser?.gamesWonByHuman += 1
                 gamesWonInARow += 1
+                if (selectedUser?.gamesWonInARow ?? 0) < gamesWonInARow {
+                    selectedUser?.gamesWonInARow = gamesWonInARow
+                }
+
             case .computer:
                 gamesWonInARow = 0
                 break
             }
         case .draw:
-            drawGamesCount += 1
+            selectedUser?.drawGamesCount += 1
         default:
             break
         }
@@ -162,6 +163,7 @@ extension TicTacToeViewModel {
     private func updateGameDuration() {
         let gameDuration = computedGameDuration(Date())
         currentGameDuration = gameDuration
+        selectedUser?.totalInGameTime += gameDuration
         currentGameStartTime = nil
     }
 
@@ -188,22 +190,22 @@ extension TicTacToeViewModel {
 
 // MARK: - SwiftDataManager methods
 extension TicTacToeViewModel {
-    func load() {
-        users = dataManager?.fetchUsers() ?? []
+    func load() async {
+        users = await dataManager.fetchUsers()
     }
 
     @discardableResult
-    func addUser(name: String, image: String) -> User {
+    func addUser(name: String, image: String) async -> User {
         let user = User(name, image)
-        dataManager?.insert(user: user)
-        load()
+        dataManager.insert(user: user)
+        await load()
         return user
     }
 
-    func deleteUser(at offsets: IndexSet) {
+    func deleteUser(at offsets: IndexSet) async {
         offsets
             .map { users[$0] }
-            .forEach { dataManager?.delete(user: $0) }
-        load()
+            .forEach { dataManager.delete(user: $0) }
+        await load()
     }
 }

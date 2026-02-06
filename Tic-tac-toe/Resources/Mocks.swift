@@ -10,14 +10,15 @@ import Foundation
 
 enum Mocks {
     static let appContainer = AppContainer()
+    static let appSettings = AppSetting()
     static let viewModel = TicTacToeViewModel(appContainer)
 
     static let users: [User] = [
-        User("Alex", "figure"),
-        User("Oleg", "figure.rower"),
-        User("Michael", "figure.run"),
-        User("Anton", "figure.american.football"),
-        User("Andrey", "figure.archery"),
+        User("Alex", "figure", totalGamesCount: 3, gamesWonByHuman: 1, gamesWonInARow: 1, totalInGameTime: 19.24),
+        User("Oleg", "figure.rower", totalGamesCount: 3, gamesWonByHuman: 2, gamesWonInARow: 2, totalInGameTime: 12.24),
+        User("Michael", "figure.run", totalGamesCount: 3, gamesWonByHuman: 2, gamesWonInARow: 2, totalInGameTime: 1.24),
+        User("Anton", "figure.american.football", totalGamesCount: 5, gamesWonByHuman: 3, drawGamesCount: 1, gamesWonInARow: 3, totalInGameTime: 24.24),
+        User("Andrey", "figure.archery", totalGamesCount: 3, gamesWonInARow: 0, totalInGameTime: 17.24),
         User("Alexey", "figure.boxing"),
         User("Dmitriy", "figure.cricket"),
         User("Nikolay", "figure.dance"),

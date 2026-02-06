@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TitleView: View {
 
-    private let title: LocalizedStringKey = "Tic-Tac-Toe"
+    private let title: LocalizedStringResource = "Tic-Tac-Toe"
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -27,10 +27,12 @@ struct TitleView: View {
                 )
                 .frame(width: computeMarkerLineWidth(), height: 1)
         }
+
     }
 
     private func computeMarkerLineWidth() -> CGFloat {
-        title.stringValue.width(font: UIFont.preferredFont(forTextStyle: .largeTitle))
+        let localizedTitle = String(localized: title)
+        return localizedTitle.width(font: UIFont.preferredFont(forTextStyle: .largeTitle))
     }
 }
 

@@ -11,6 +11,7 @@ import SwiftUI
 enum TabItemType {
     case playground
     case scorecards
+    case settings
 }
 
 struct TabItemModifier: ViewModifier {

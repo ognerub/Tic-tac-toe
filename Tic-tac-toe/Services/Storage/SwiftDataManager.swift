@@ -8,8 +8,15 @@
 import Foundation
 import SwiftData
 
+protocol SwiftDataManagerProtocol {
+    func fetchUsers() async -> [User]
+    func insert(user: User)
+    func delete(user: User)
+    func save()
+}
+
 @MainActor
-final class SwiftDataManager {
+final class SwiftDataManager: SwiftDataManagerProtocol {
 
     private let context: ModelContext
 
@@ -19,14 +26,16 @@ final class SwiftDataManager {
 
     // MARK: - Fetch
 
-    func fetchUsers() -> [User] {
+    func fetchUsers() async -> [User] {
         let descriptor = FetchDescriptor<User>(
-            sortBy: [SortDescriptor(\.gamesWonInARow)]
+            sortBy: [
+                SortDescriptor(\.gamesWonInARow, order: .reverse),
+                SortDescriptor(\.totalInGameTime, order: .forward),
+                SortDescriptor(\.name, order: .forward)
+            ]
         )
         return (try? context.fetch(descriptor)) ?? []
     }
-
-    // MARK: - Write
 
     func insert(user: User) {
         context.insert(user)

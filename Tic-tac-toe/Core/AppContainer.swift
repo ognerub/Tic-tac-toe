@@ -1,9 +1,10 @@
 //
-//  Tic_tac_toeApp.swift
+//  AppContainer.swift
 //  Tic-tac-toe
 //
-//  Created by Alexander Ognerubov on 04.02.2026.
+//  Created by Alexander Ognerubov on 06.02.2026.
 //
+
 
 import SwiftUI
 import SwiftData
@@ -12,7 +13,9 @@ import SwiftData
 final class AppContainer {
 
     let modelContainer: ModelContainer
-    let swiftDataManager: SwiftDataManager
+    let swiftDataManager: SwiftDataManagerProtocol
+    let networkManager: NetworkManagerProtocol
+    let apiClient: APIClientProtocol
 
     init() {
         let schema = Schema([User.self])
@@ -22,18 +25,7 @@ final class AppContainer {
         }
         self.modelContainer = container
         self.swiftDataManager = SwiftDataManager(container: container)
-    }
-}
-
-
-@main
-struct Tic_tac_toeApp: App {
-
-    private let appContainer = AppContainer()
-
-    var body: some Scene {
-        WindowGroup {
-            TicTacToeView(appContainer)
-        }
+        self.apiClient = APIClient()
+        self.networkManager = NetworkManager(apiClient)
     }
 }
